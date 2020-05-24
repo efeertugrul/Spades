@@ -1,36 +1,78 @@
 import numpy as np
 import random
+import pandas as pd
 
 ## Koz maça
 
 """
-Deck is created
-Card shuffle added
-Player card sort added
-
+Deck is created.
+Card shuffle added.
+Player card sort added.
+Table of scores is added.
+# TODO:
 Round needs to be modified.
-Bids needs to be modified.
-Table of scores must be added.
+    play function should be added
 
+Bids needs to be modified.
 """
 class spades:
     def __init__(self, players):
         if(len(players)!=4):
             raise "Number of players is not 4."
         self.players = players
-        #Koz
-        self.trump = 0
-        self.deck = deck()
 
-    def shuffle_deck(self):
-        pass
+        self.current_round_no = 0
+        self.current_round = None
+        #rounds are held in a list
+        self.previous_rounds = []
 
 class round:
     def __init__(self):
+
+        self.deck = deck()
+
+        self.trump = 0
+
+        self.bids = []
+
+        self.current_player = 0
+
+        self.current_turn = 0
+
+    def shuffle_deck(self):
+        self.deck.shuffle_cards();
+
+    def play(self):
         pass
 
+class score_tables:
+    def __init__(self, player_names):
+        if((type(player_names) != np.ndarray) or  (type(player_names)!= list)):
+            raise "The player_names is not list or numpy array."
+
+        self.scores = pd.DataFrame(columns = player_names)
+
+    def add_score_row(self, score_dict):
+        if(len(score_array)!=4):
+            raise "Invalid length of array: {}".format(len(score_array))
+
+        self.scores = self.scores.append([score_dict])
+
+    def __getitem__(self, args):
+        if(type(args)==str):
+            return self.scores.loc[args]
+        elif(type(args)==slice or type(args)==int):
+            return self.scores.iloc[args]
+        else:
+            raise "Type Error, {} is not slice or integer".format(args)
+
+    def __str__(self):
+        return self.scores
+
+    __repr__ = __str__
 
 class player:
+
     def __init__(self, name):
         self.name = name
         self.cards = np.ndarray((13), card)
@@ -61,9 +103,12 @@ class player:
                     swap(i - 1, i)
                     swapped = True
 
+    def bid(self, number):
+        return number
 
 
 class deck:
+
     def __init__(self):
         self.cards = np.ndarray((52), card)
         card_suits = ["Karo", "Maca", "Kupa", "Sinek"]
@@ -93,6 +138,7 @@ class deck:
     __str__ = __repr__
 
 class card:
+
     def __init__(self, card_no, card_name, suit):
         self.card_no = card_no
         self.card_name = card_name
@@ -134,5 +180,6 @@ class card:
 
 def main():
     pass
+
 if __name__ == "__main__":
     main()
