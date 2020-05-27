@@ -9,14 +9,14 @@ Deck is created.
 Card shuffle added.
 Player card sort added.
 Table of scores is added.
+
 # TODO:
 Round needs to be modified.
     play function should be added
 
-Bids needs to be modified.
-
 Total row should be added to the __str__ function of the score_tables.
 """
+
 class spades:
     def __init__(self, players, score_to_go):
         if(len(players)!=4):
@@ -33,6 +33,11 @@ class spades:
         self.previous_rounds = []
 
         self.score_table = score_tables(players)
+
+    def rotate_players(self):
+        self.players = self.players[1:] + self.players[:1]
+        print(self.players)
+        print("\n")
 
     def find_max(score_table):
         """
@@ -58,13 +63,17 @@ class spades:
             max = spades.find_max(self.score_table)[0]
             round+=1
             print("Round has ended. \n Score table:\n", self.score_table)
+
 class round:
-    def __init__(self):
+    def __init__(self, players):
+
+        self.players = players
 
         self.deck = deck()
 
         self.trump = 0
 
+        #list of bids
         self.bids = []
 
         self.current_player = 0
@@ -76,9 +85,22 @@ class round:
 
     def play(self):
         pass
-    def get_bids(self, players):
-        for player, i in zip(players, range(0,4)):
-            self.bids[i] = player.bid()
+
+    def get_bids(self):
+        for player in self.players:
+            self.bids.append(player.bid())
+
+    def select_trump(self):
+
+        #get index of players
+        player_index = np.where(np.array(self.bids) == max(self.bids))[0][0]
+        print("{} selects the trump".format(self.players[player_index].name))
+        #make player select the trump
+        self.trump = self.players[player_index].select_trump()
+
+        #update value of the cards according to the trump
+        self.deck.update_values(self.trump)
+
 
 class score_tables:
     def __init__(self, player_names):
@@ -115,6 +137,7 @@ class player:
 
     def gather_cards(self, cards):
         self.cards = cards
+        self.sort_cards()
 
     def sort_cards(self):
 
@@ -142,17 +165,38 @@ class player:
 
 
     def bid(self, number = None):
+        print("{}'s cards: '\n".format(self.name))
+        print(self.cards)
+
         if(number == None):
             while(True):
                 try:
                     number = int(input("Type your bid: "))
                 except ValueError:
-                    print("Please type an integer!: ")
+                    print("Please type an integer! ")
                     continue
                 else:
                     break
         return number
 
+    def select_trump(self):
+        print("Current cards:\n")
+        print(self.cards)
+
+        while(True):
+            try:
+                trump = int(input("Select trump: "))
+            except ValueError:
+                print( "Please type an integer! ")
+                continue
+            else:
+                break
+        return trump
+
+    def __str__(self):
+        return self.name
+
+    __repr__ = __str__
 
 class deck:
 
@@ -181,6 +225,12 @@ class deck:
         for i in range(len(self.cards)):
             representation = representation + str(self.cards[i]) + "\n"
         return representation
+
+    def update_values(self, trump):
+
+        for card in self.cards:
+            if(card.card_no%4 == trump):
+                card.value += 13
 
     __str__ = __repr__
 
@@ -222,11 +272,25 @@ class card:
     def __ne__(self,other):
         return not(self.__eq__(self, other))
 
+
     __repr__ = __str__
 
 
 def main():
-    game = spades(["A", "B", "C", "D"], 10)
-    game.start()
+    """ players = [player("A"), player("B"), player("C"), player("D")]
+        r = round(players)
+        d = deck()
+        d.shuffle_cards()
+        for p, i in zip(players, range(0,4)):
+            p.gather_cards(d[i*13:(i+1)*13])
+        r.get_bids()
+        r.select_trump()
+    """
+    """    players = [player("A"), player("B"), player("C"), player("D")]
+        s = spades(players, 10)
+        for i in range(0,10):
+            print("Rotating")
+            s.rotate_players()
+    """
 if __name__ == "__main__":
     main()
