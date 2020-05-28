@@ -87,8 +87,8 @@ class round:
         pass
 
     def get_bids(self):
-        for player in self.players:
-            self.bids.append(player.bid())
+        for p in self.players:
+            self.bids.append(p.bid())
 
     def select_trump(self):
 
@@ -108,11 +108,15 @@ class score_tables:
             raise "The player_names is not list or numpy array."
 
         self.scores = pd.DataFrame(columns = player_names)
-        self.columns = self.scores.columns
+        self.names = self.scores.columns
 
-    def add_score_row(self, score_dict):
-        if(len(score_dict)!=4):
+    def add_score_row(self, score_array):
+        if(len(score_array)!=4):
             raise "Invalid length of array: {}".format(len(score_array))
+        score_dict = {}
+
+        for name, score in zip(self.names, score_array):
+            score_dict[name] = score
 
         self.scores = self.scores.append([score_dict], ignore_index = True)
 
@@ -125,7 +129,16 @@ class score_tables:
             raise "Type Error, {} is not slice or integer".format(args)
 
     def __str__(self):
-        return self.scores.to_string()
+        if self.scores.empty:
+            return self.scores.to_string()
+
+        table = "\n"+self.scores.to_string()
+        last = "------------------\nT "
+        for i in range(0, 4):
+            last = last + " {}|".format(sum(self.scores[self.names[i]]))
+        table = table + "\n" + last
+
+        return table
 
     __repr__ = __str__
 
@@ -275,22 +288,9 @@ class card:
 
     __repr__ = __str__
 
-
 def main():
-    """ players = [player("A"), player("B"), player("C"), player("D")]
-        r = round(players)
-        d = deck()
-        d.shuffle_cards()
-        for p, i in zip(players, range(0,4)):
-            p.gather_cards(d[i*13:(i+1)*13])
-        r.get_bids()
-        r.select_trump()
-    """
-    """    players = [player("A"), player("B"), player("C"), player("D")]
-        s = spades(players, 10)
-        for i in range(0,10):
-            print("Rotating")
-            s.rotate_players()
-    """
+    pass
+
 if __name__ == "__main__":
-    main()
+    #main()
+    pass
