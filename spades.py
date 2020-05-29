@@ -5,16 +5,11 @@ import pandas as pd
 ## Koz maça
 
 """
-Deck is created.
-Card shuffle added.
-Player card sort added.
-Table of scores is added.
-
 # TODO:
 Round needs to be modified.
     play function should be added
 
-Total row should be added to the __str__ function of the score_tables.
+Turn class needs to be added.
 """
 
 class spades:
@@ -65,6 +60,7 @@ class spades:
             print("Round has ended. \n Score table:\n", self.score_table)
 
 class round:
+
     def __init__(self, players):
 
         self.players = players
@@ -87,8 +83,21 @@ class round:
         pass
 
     def get_bids(self):
-        for p in self.players:
-            self.bids.append(p.bid())
+        bid = 0
+        for p, i in zip(self.players, range(0,4)):
+            while(True):
+                bid = p.bid()
+                if((i==0) and (bid < 4)):
+                    print("First player should bid more than or equal to 4")
+                elif((i!=0) and (bid != 0) and (bid <= max(self.bids))):
+                    print("You should bid more than or equal to 5 and you should raise the previous bids")
+                else:
+                    self.bids.append(bid)
+                    information = "\nBids:\n"
+                    for p, b in zip(self.players[:i+1], self.bids):
+                        information = information + "{}: {}, ".format(p, b)
+                    print(information+ "\n")
+                    break
 
     def select_trump(self):
 
@@ -100,6 +109,11 @@ class round:
 
         #update value of the cards according to the trump
         self.deck.update_values(self.trump)
+
+class turn:
+
+    def __init__(self):
+        pass
 
 
 class score_tables:

@@ -19,7 +19,7 @@ def select_trump_test():
         p.gather_cards(d[i*13:(i+1)*13])
     r.get_bids()
     r.select_trump()
-    print(d.values)
+
 
 def player_rotate_test():
     players = [player("A"), player("B"), player("C"), player("D")]
