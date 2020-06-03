@@ -8,8 +8,11 @@ import pandas as pd
 # TODO:
 Round needs to be modified.
     play function should be added
-
-Turn class needs to be added.
+Turn class added
+	play turn function needs to be modified.
+		check if any player has played trump ever in that round
+		show players which cards can be played
+		etc...
 """
 
 class spades:
@@ -51,9 +54,16 @@ class spades:
 
 
     def start(self):
-        round = 0
+        round_no = 0
         max = 0
-        while(round == 0 or max < self.score_to_go):
+        while(round_no == 0 or max < self.score_to_go):
+			r = round(self.players)
+			r.shuffle_deck()
+			r.deal_cards()
+			r.get_bids()
+			r.select_trump()
+			r.rotate_players()
+
             self.score_table.add_score_row({self.players[0]:1, self.players[1]:2, self.players[2]:3, self.players[3]:4})
             max = spades.find_max(self.score_table)[0]
             round+=1
@@ -63,11 +73,15 @@ class round:
 
     def __init__(self, players):
 
-        self.players = players
+        self.players = []
+		for p in players:
+			self.players.append(p)
 
         self.deck = deck()
 
-        self.trump = 0
+        self.trump = -1
+
+		self.played_trump=False
 
         #list of bids
         self.bids = []
@@ -76,11 +90,12 @@ class round:
 
         self.current_turn = 0
 
+		self.p_scores = {}
+		for p in self.players:
+			self.p_scores[p.name] = 0
+
     def shuffle_deck(self):
         self.deck.shuffle_cards();
-
-    def play(self):
-        pass
 
     def get_bids(self):
         bid = 0
@@ -106,14 +121,53 @@ class round:
         print("{} selects the trump".format(self.players[player_index].name))
         #make player select the trump
         self.trump = self.players[player_index].select_trump()
+		#update value of the cards according to the trump
+		self.deck.update_values(self.trump)
 
-        #update value of the cards according to the trump
-        self.deck.update_values(self.trump)
+	def play_turns(self):
+
+		for i in range(0,13):
+			t = turn()
+			p_index = t.play_turn(self.players)
+			p_name = self.players[p_index].name
+			del t
+			self.p_scores[p_name] = self.p_scores[p_name] + 1
+
+
+	def deal_cards(self):
+		for p, i in zip(self.players, range(0,4)):
+	        p.gather_cards(d[i*13:(i+1)*13])
+
+	def rotate_players(self):
+
+		player_index = np.where(np.array(self.bids) == max(self.bids))[0][0]
+		#rotate the players according to order of play
+		self.players = self.players[player_index:] + self.players[:player_index]
 
 class turn:
 
-    def __init__(self):
-        pass
+    def __init__(self, t_played):
+		#played cards in the current turn
+		self.cards = []
+		#first suits that was played
+		self.suit = -1
+		#minimum value to be played
+		self.min_value=0
+
+		self.t_played = t_played
+
+	def play_turn(self, players, trump):
+		for p in players:
+			self.cards.append(p.play(self.cards))
+
+		cards = [c.change_value(self.suit, trump) for c in cards]
+		max_p = 0
+		max_v = 0
+		for i in in range(0,4):
+			if(max_v < cards[i].value):
+				max_v = cards[i].value
+				max_p = i
+		return max_p
 
 
 class score_tables:
@@ -124,13 +178,9 @@ class score_tables:
         self.scores = pd.DataFrame(columns = player_names)
         self.names = self.scores.columns
 
-    def add_score_row(self, score_array):
-        if(len(score_array)!=4):
-            raise "Invalid length of array: {}".format(len(score_array))
-        score_dict = {}
-
-        for name, score in zip(self.names, score_array):
-            score_dict[name] = score
+    def add_score_row(self, score_dict):
+        if(len(score_dict)!=4):
+            raise "Invalid length of dictionary: {}".format(len(score_dict))
 
         self.scores = self.scores.append([score_dict], ignore_index = True)
 
@@ -220,6 +270,9 @@ class player:
                 break
         return trump
 
+	def play(self, cards):
+
+		pass
     def __str__(self):
         return self.name
 
@@ -268,6 +321,10 @@ class card:
         self.card_name = card_name
         self.value =  int(card_no/4)+1
         self.suit = suit
+
+	def change_value(self, suit, trump):
+		if(self.suit != suit and trump != self.suit):
+			self.value = 0
 
     def __str__(self):
         return self.card_name
