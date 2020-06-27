@@ -57,16 +57,16 @@ class spades:
         round_no = 0
         max = 0
         while(round_no == 0 or max < self.score_to_go):
-			r = round(self.players)
-			r.shuffle_deck()
-			r.deal_cards()
-			r.get_bids()
-			r.select_trump()
-			r.rotate_players()
+            r = round(self.players)
+            r.shuffle_deck()
+            r.deal_cards()
+            r.get_bids()
+            r.select_trump()
+            r.rotate_players()
 
             self.score_table.add_score_row({self.players[0]:1, self.players[1]:2, self.players[2]:3, self.players[3]:4})
             max = spades.find_max(self.score_table)[0]
-            round+=1
+            round_no += 1
             print("Round has ended. \n Score table:\n", self.score_table)
 
 class round:
@@ -74,14 +74,14 @@ class round:
     def __init__(self, players):
 
         self.players = []
-		for p in players:
-			self.players.append(p)
+        for p in players:
+        	self.players.append(p)
 
         self.deck = deck()
 
         self.trump = -1
 
-		self.played_trump=False
+        self.played_trump=False
 
         #list of bids
         self.bids = []
@@ -90,9 +90,9 @@ class round:
 
         self.current_turn = 0
 
-		self.p_scores = {}
-		for p in self.players:
-			self.p_scores[p.name] = 0
+        self.p_scores = {}
+        for p in self.players:
+        	self.p_scores[p.name] = 0
 
     def shuffle_deck(self):
         self.deck.shuffle_cards();
@@ -121,54 +121,53 @@ class round:
         print("{} selects the trump".format(self.players[player_index].name))
         #make player select the trump
         self.trump = self.players[player_index].select_trump()
-		#update value of the cards according to the trump
-		self.deck.update_values(self.trump)
+        #update value of the cards according to the trump
+        self.deck.update_values(self.trump)
 
-	def play_turns(self):
+    def play_turns(self):
 
-		for i in range(0,13):
-			t = turn()
-			p_index = t.play_turn(self.players)
-			p_name = self.players[p_index].name
-			del t
-			self.p_scores[p_name] = self.p_scores[p_name] + 1
+        for i in range(0,13):
+        	t = turn()
+        	p_index = t.play_turn(self.players)
+        	p_name = self.players[p_index].name
+        	del t
+        	self.p_scores[p_name] = self.p_scores[p_name] + 1
 
 
-	def deal_cards(self):
-		for p, i in zip(self.players, range(0,4)):
-	        p.gather_cards(d[i*13:(i+1)*13])
+    def deal_cards(self):
+        for p, i in zip(self.players, range(0,4)):
+            p.gather_cards(d[i*13:(i+1)*13])
 
-	def rotate_players(self):
+    def rotate_players(self):
 
-		player_index = np.where(np.array(self.bids) == max(self.bids))[0][0]
-		#rotate the players according to order of play
-		self.players = self.players[player_index:] + self.players[:player_index]
+        player_index = np.where(np.array(self.bids) == max(self.bids))[0][0]
+        #rotate the players according to order of play
+        self.players = self.players[player_index:] + self.players[:player_index]
 
 class turn:
 
     def __init__(self, t_played):
-		#played cards in the current turn
-		self.cards = []
-		#first suits that was played
-		self.suit = -1
-		#minimum value to be played
-		self.min_value=0
+    	#played cards in the current turn
+    	self.cards = []
+    	#first suits that was played
+    	self.suit = -1
+    	#minimum value to be played
+    	self.min_value=0
+        #if trump has ever been played before
+    	self.t_played = t_played
 
-		self.t_played = t_played
+    def play_turn(self, players, trump):
+        for p in players:
+            self.cards.append(p.play(self.cards, self.t_played))
+        cards = [c.change_value(self.suit, trump) for c in self.cards]
+        max_p = 0
+        max_v = 0
 
-	def play_turn(self, players, trump):
-		for p in players:
-			self.cards.append(p.play(self.cards))
-
-		cards = [c.change_value(self.suit, trump) for c in cards]
-		max_p = 0
-		max_v = 0
-		for i in in range(0,4):
-			if(max_v < cards[i].value):
-				max_v = cards[i].value
-				max_p = i
-		return max_p
-
+        for i in range(0,4):
+            if(max_v < cards[i].value):
+                max_v = cards[i].value
+                max_p = 1
+        return max_p
 
 class score_tables:
     def __init__(self, player_names):
@@ -270,9 +269,20 @@ class player:
                 break
         return trump
 
-	def play(self, cards):
+    def play(self, cards, trump, t_played):
+        if(len(cards)>0):
+            min_to_play = max(cards).value
+        else:
+            min_to_play = 0
 
-		pass
+        p_card_values = [x.value for x in self.cards]
+        #burada kaldık
+        print(min_to_play)
+
+    def playable_cards(self, card_list, trump, t_played):
+        pass
+
+
     def __str__(self):
         return self.name
 
@@ -282,6 +292,7 @@ class deck:
 
     def __init__(self):
         self.cards = np.ndarray((52), card)
+        self.shape = self.cards.shape
         card_suits = ["Karo", "Maca", "Kupa", "Sinek"]
         face_cards = [" Vale", " Kiz", " Papaz", " As"]
         name = ""
@@ -299,6 +310,7 @@ class deck:
 
     def __getitem__(self, arg):
         return self.cards[arg]
+
 
     def __repr__(self):
         representation = ""
@@ -322,9 +334,20 @@ class card:
         self.value =  int(card_no/4)+1
         self.suit = suit
 
-	def change_value(self, suit, trump):
-		if(self.suit != suit and trump != self.suit):
-			self.value = 0
+    def change_value(self, suit, trump):
+        if(self.suit != suit and trump != self.suit):
+            self.value = 0
+
+    def suit_to_int(self):
+        suits = {"Karo": 0, "Maca": 1, "Kupa": 2, "Sinek": 3}
+        return suits[self.suit]
+
+    def int_to_suit(suit_no):
+        if not((suit_no<4) and (suit_no>=0)):
+            raise Exception("Suit no must be between 0-4.")
+
+        suits = ["Karo", "Maca", "Kupa", "Sinek"]
+        return suits[suit_no]
 
     def __str__(self):
         return self.card_name
