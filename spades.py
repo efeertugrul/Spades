@@ -63,10 +63,12 @@ class spades:
             r.get_bids()
             r.select_trump()
             r.rotate_players()
+            r.play_turns()
 
             self.score_table.add_score_row({self.players[0]:1, self.players[1]:2, self.players[2]:3, self.players[3]:4})
             max = spades.find_max(self.score_table)[0]
             round_no += 1
+            self.rotate_players()
             print("Round has ended. \n Score table:\n", self.score_table)
 
 class round:
@@ -136,7 +138,7 @@ class round:
 
     def deal_cards(self):
         for p, i in zip(self.players, range(0,4)):
-            p.gather_cards(d[i*13:(i+1)*13])
+            p.gather_cards(self.deck[i*13:(i+1)*13])
 
     def rotate_players(self):
 
@@ -158,7 +160,7 @@ class turn:
 
     def play_turn(self, players, trump):
         for p in players:
-            self.cards.append(p.play(self.cards, self.t_played))
+            self.cards.append(p.play(self.cards, trump, self.t_played))
         cards = [c.change_value(self.suit, trump) for c in self.cards]
         max_p = 0
         max_v = 0
@@ -270,14 +272,31 @@ class player:
         return trump
 
     def play(self, cards, trump, t_played):
+        print(cards)
         if(len(cards)>0):
-            min_to_play = max(cards).value
+            min_to_play = max(cards)
+            print("min value {}".format(min_to_play))
         else:
-            min_to_play = 0
+            min_to_play = None
 
         p_card_values = [x.value for x in self.cards]
+        if(len(cards)>0):
+            index = np.where(self.cards > min_to_play)[0]
+            print("Playable cards: ")
+            print("index: {}".format(index))
+            print(self.cards[index])
+            for c in self.cards[index]:
+                print(c.value)
+        else:
+            print("Playable cards: ")
+            print(self.cards)
         #burada kaldık
-        print(min_to_play)
+        card_to_play_index = int(input("Select card to play : "))
+        card_to_play, self.cards = self.cards[card_to_play_index], np.delete(self.cards, card_to_play_index)
+        print(card_to_play)
+        return card_to_play
+
+
 
     def playable_cards(self, card_list, trump, t_played):
         pass
@@ -324,6 +343,10 @@ class deck:
             if(card.card_no%4 == trump):
                 card.value += 13
 
+    def update_table(card_list, trump):
+
+        for card in self.cards:
+            pass
     __str__ = __repr__
 
 class card:
